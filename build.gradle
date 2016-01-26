@@ -1,0 +1,115 @@
+buildscript {
+    repositories {
+        maven {
+            url MAVEN_URL
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.3.0'
+    }
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url MAVEN_URL
+    }
+}
+apply plugin: 'com.android.library'
+android {
+    compileSdkVersion 21
+    buildToolsVersion "23.0.1"
+
+    defaultConfig {
+        minSdkVersion 9
+        targetSdkVersion 21
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    lintOptions {
+        abortOnError false
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+
+    compile 'com.google.guava:guava:' + GUAVA_VERSION
+    compile 'org.codehaus.jackson:jackson-jaxrs:' + JACKSON_JAXRS_VERSION
+    compile 'org.apache.logging.log4j:log4j-api:' + LOG4J_VERSION
+    compile 'org.apache.logging.log4j:log4j-core:' + LOG4J_VERSION
+
+    //Test dependencies:
+    testCompile 'junit:junit:' + JUNIT_VERSION
+    testCompile 'org.mockito:mockito-all:' + MOCKITO_VERSION
+    testCompile 'org.robolectric:robolectric:' + ROBOLECTRIC_VERSION
+}
+
+task clearJar(type: Delete) {
+    delete 'target/'+ project.name + '.jar'
+    delete 'build/libs/'+ project.name + '.jar'
+}
+
+
+task clearTargetClasses(type: Delete){
+    delete 'target/classes'
+}
+task cleanTestReports(type: Delete){
+    delete SUREFIRE_REPORTS_DIR
+}
+
+task clearAARFromTarget(type: Delete){
+    delete 'target/' + project.name + '.aar'
+}
+
+clean.dependsOn clearJar
+clean.dependsOn clearTargetClasses
+clean.dependsOn cleanTestReports
+clean.dependsOn clearAARFromTarget
+
+//By default, it puts the JAR in /build/libs.
+task createJar(type: Jar) {
+    from 'build/intermediates/classes/release/'
+    archiveName project.name + '.jar'
+    exclude '**/BuildConfig.*'
+}
+
+//task createJar(type: Jar){
+//    from 'build/intermediates/classes/release/'
+//    from {configurations.compile.collect{ it.isDirectory() ? it : zipTree(it)}}
+//    exclude ('example/**', 'META-INF/**')
+//
+//}
+
+task makeJar(type: Copy) {
+    from 'build/libs'
+    into 'target/'
+    include project.name + '.jar'
+}
+
+makeJar.dependsOn clearJar
+makeJar.dependsOn createJar
+
+task copyTestReports(type: Copy){
+    from 'build/test-results/release'
+    into SUREFIRE_REPORTS_DIR
+}
+
+task copyAARToTarget(type: Copy){
+    from 'build/outputs/aar/'
+    into 'target/'
+    include project.name + '-release.aar'
+    rename { String fileName ->
+        fileName = project.name + '.aar'
+    }
+}
+
+makeJar.dependsOn copyAARToTarget
