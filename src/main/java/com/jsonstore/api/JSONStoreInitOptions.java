@@ -14,19 +14,26 @@
 package com.jsonstore.api;
 
 import com.jsonstore.database.DatabaseConstants;
+import com.jsonstore.security.SecurityUtils;
+
 /**
  * Options that are used to modify the init operation in JSONStore.
  */
 public final class JSONStoreInitOptions {
 	private String username, password, secureRandom;
 	private boolean clear = false;
+	private int pbkdf2Iterations = SecurityUtils.PBKDF2_ITERATIONS; //The default has to remain 10000, or all applications from previous versions will crash.
 
 	public JSONStoreInitOptions(String username) {
 		setUsername(username);
+		setPassword("");
+		setSecureRandom(null);
 	}
 	
 	public JSONStoreInitOptions() {
 		setUsername(null);
+		setPassword("");
+		setSecureRandom(null);
 	}
 
 	/**
@@ -69,4 +76,42 @@ public final class JSONStoreInitOptions {
 	public void setPassword(String new_password) {
 		this.password = new_password == null ? "" : new_password; //$NON-NLS-1$
 	}
+
+	/**
+	 * Get the password to be used for the store.
+	 * @return password String The password to be used for the store.
+	 */
+	public String getPassword() {
+		return password;
+	}
+
+
+	/**
+	 * Get the secure random that is used by security artifacts.
+	 * @return The secure random string to be used by security artifacts.
+	 */
+	public String getSecureRandom() {
+		return secureRandom;
+	}
+
+	/**
+	 * Set the secure random to be used by security artifacts.
+	 * @param secureRandom The secure random string to be used by security artifacts.
+	 */
+	public void setSecureRandom(String secureRandom) {
+		this.secureRandom = secureRandom;
+	}
+
+
+	public int getPBKDF2Iterations() {
+		return pbkdf2Iterations;
+	}
+
+	public void setPBKDF2Iterations(int pbkdf2Iterations) {
+		this.pbkdf2Iterations = pbkdf2Iterations;
+	}
+
+
+
+
 }

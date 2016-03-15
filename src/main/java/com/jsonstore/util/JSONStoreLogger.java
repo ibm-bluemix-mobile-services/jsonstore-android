@@ -13,8 +13,10 @@
 
 package com.jsonstore.util;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+//import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,9 +25,10 @@ import java.util.HashMap;
 
 public class JSONStoreLogger {
 
-	private static Logger logger = LogManager.getLogger("JSONSTORE"); //$NON-NLS-1$
-	private static Logger analyticsLogger = LogManager.getLogger("JSONSTORE_ANALYTICS"); //$NON-NLS-1$
-	
+	private static Logger logger = LoggerFactory.getLogger(JSONStoreLogger.class);
+	//private static Logger logger = LogManager.getLogger(JSONStoreLogger.class); //$NON-NLS-1$
+//	private static Logger analyticsLogger = LogManager.getLogger("JSONSTORE_ANALYTICS"); //$NON-NLS-1$
+
 	private static boolean analyticsEnabled = false;
 	
 	//Analytics constants:
@@ -134,7 +137,7 @@ public class JSONStoreLogger {
 		private String username;
 		private String collection;
 		private String operation;
-		
+
 		public JSONStoreAnalyticsLogInstance(String username, String collection, String operation) {
 			this.startTime = System.currentTimeMillis();
 			this.username = username;
@@ -153,7 +156,7 @@ public class JSONStoreLogger {
      
      public static synchronized JSONStoreLogger getLogger (String name) {
     	 JSONStoreLogger logger = JSONStoreLogger.instances.get (name);
-          
+
           if (logger == null) {
                logger = new JSONStoreLogger (name);
                

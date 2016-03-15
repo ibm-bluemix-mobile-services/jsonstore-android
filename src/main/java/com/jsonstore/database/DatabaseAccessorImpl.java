@@ -16,9 +16,8 @@ package com.jsonstore.database;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.jsonstore.util.JSONStoreLogger;
 import com.jsonstore.util.JSONStoreUtil;
-
-import org.apache.logging.log4j.Logger;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,7 +28,7 @@ public class DatabaseAccessorImpl implements DatabaseAccessor {
 	private static final String SQL_TABLE_EXISTS = "SELECT DISTINCT tbl_name FROM sqlite_master WHERE tbl_name = \"{0}\";"; //$NON-NLS-1$
 
 	private static final HashSet<String> ignoredSchemaNodes = new HashSet<String>();
-	private static final Logger logger = JSONStoreUtil.getDatabaseLogger();
+	private static final JSONStoreLogger logger = JSONStoreUtil.getDatabaseLogger();
 
 	static {
 		// Set up the ignored schema nodes.  We don't want to use these in
@@ -96,7 +95,7 @@ public class DatabaseAccessorImpl implements DatabaseAccessor {
 	public void createTable() {
 		String name = this.schema.getName();
 
-		logger.trace("creating database \"" + name + "\"");
+		logger.logTrace("creating database \"" + name + "\"");
 
 		execSQL(DatabaseAccessorImpl.SQL_CREATE_TABLE, name, DatabaseConstants.FIELD_ID, formatSchemaColumns(), DatabaseConstants.FIELD_JSON, DatabaseConstants.FIELD_DIRTY, DatabaseConstants.FIELD_DELETED, DatabaseConstants.FIELD_OPERATION);
 	}
@@ -104,7 +103,7 @@ public class DatabaseAccessorImpl implements DatabaseAccessor {
 	public void dropTable() {
 		String name = this.schema.getName();
 
-		logger.trace("[!!!] dropping database \"" + name + "\"");
+		logger.logTrace("[!!!] dropping database \"" + name + "\"");
 
 		execSQL(DatabaseAccessorImpl.SQL_DROP_TABLE, name);
 	}
@@ -112,8 +111,8 @@ public class DatabaseAccessorImpl implements DatabaseAccessor {
 	private void execSQL(String sql, Object... args) {
 		String formattedSQL = JSONStoreUtil.formatString(sql, args);
 
-		logger.trace("executing SQL on database \"" + this.schema.getName() + "\":");
-		logger.trace("   " + formattedSQL);
+		logger.logTrace("executing SQL on database \"" + this.schema.getName() + "\":");
+		logger.logTrace("   " + formattedSQL);
 
 		this.writableDB.getDatabase().execSQL(formattedSQL);
 	}

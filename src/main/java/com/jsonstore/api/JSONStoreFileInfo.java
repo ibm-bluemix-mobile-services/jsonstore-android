@@ -22,9 +22,10 @@ public class JSONStoreFileInfo {
 	private long fileSize;
 	private boolean encrypted;
 	
-	JSONStoreFileInfo(String username, long file_size) {
+	JSONStoreFileInfo(String username, long file_size, boolean encrypted) {
 		this.username = username;
 		this.fileSize = file_size;
+		this.encrypted = encrypted;
 	}
 	
 	/**
@@ -39,6 +40,13 @@ public class JSONStoreFileInfo {
 	 */
 	public long getFileSizeBytes() {
 		return fileSize;
+	}
+
+	/**
+	 * @return true if the file is encrypted, false otherwise.
+	 */
+	public boolean isEncrypted() {
+		return encrypted;
 	}
 
 }

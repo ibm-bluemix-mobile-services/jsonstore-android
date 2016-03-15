@@ -93,12 +93,12 @@ public class WritableDatabase extends ReadableDatabase {
 		   sql = JSONStoreUtil.formatString (WritableDatabase.SQL_DELETE,
 		        dbName, whereClauseStr.toString());
 		   
-		   logger.trace ("executing delete on database \"" + dbName + "\":");
-		   logger.trace ("   " + sql); //$NON-NLS-1$
-		   logger.trace ("   args:");
+		   logger.logTrace ("executing delete on database \"" + dbName + "\":");
+		   logger.logTrace ("   " + sql); //$NON-NLS-1$
+		   logger.logTrace ("   args:");
 		   
 		   for (int i = 0; i < whereValues.length; ++i) {
-		        logger.trace ("      " + whereValues[i]); //$NON-NLS-1$
+		        logger.logTrace ("      " + whereValues[i]); //$NON-NLS-1$
 		   }
 	}
  
@@ -258,12 +258,12 @@ public class WritableDatabase extends ReadableDatabase {
 		        dbName, columnsStr.toString(), (whereClause == null) ?
 		        "" : WritableDatabase.SQL_WHERE + whereClause.toString()); //$NON-NLS-1$
 		   
-		   logger.trace ("executing update on database \"" + dbName + "\":");
-		   logger.trace ("   sql: " + sql);
-		   logger.trace ("   arguments:");
+		   logger.logTrace ("executing update on database \"" + dbName + "\":");
+		   logger.logTrace ("   sql: " + sql);
+		   logger.logTrace ("   arguments:");
 		   
 		   for (String whereValue : whereValues) {
-		        logger.trace ("      " + whereValue); //$NON-NLS-1$
+		        logger.logTrace ("      " + whereValue); //$NON-NLS-1$
 		   }
 	}
      

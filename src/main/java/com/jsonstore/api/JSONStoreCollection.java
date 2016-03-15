@@ -45,7 +45,6 @@ import com.jsonstore.util.JSONStoreLogger;
 import com.jsonstore.util.JSONStoreLogger.JSONStoreAnalyticsLogInstance;
 import com.jsonstore.util.JSONStoreUtil;
 
-import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -72,7 +71,7 @@ public class JSONStoreCollection {
     private JSONStore initializedJSONStoreInstance;
     private boolean wasReopened;
     private DatabaseSchema schema;
-    private Logger logger = JSONStoreUtil.getCoreLogger();
+    private JSONStoreLogger logger = JSONStoreUtil.getCoreLogger();
 
     public JSONStoreCollection(String name) throws JSONStoreInvalidSchemaException {
 
@@ -82,7 +81,7 @@ public class JSONStoreCollection {
         if(name == null || name.isEmpty()) {
             String message = "Error when creating the collection. Collection name cannot be null.";
             JSONStoreInvalidSchemaException jsException = new JSONStoreInvalidSchemaException(message);
-            logger.error(message, jsException);
+            logger.logError(message, jsException);
             throw jsException;
         }
         this.name = name;
@@ -112,7 +111,7 @@ public class JSONStoreCollection {
         if (this.initializedJSONStoreInstance == null) {
             String message = "Collection is not initialized.";
             JSONStoreDatabaseClosedException jsException = new JSONStoreDatabaseClosedException(message);
-            logger.error(message, jsException);
+            logger.logError(message, jsException);
             throw jsException;
         }
 
@@ -120,7 +119,7 @@ public class JSONStoreCollection {
         if (mgr == null || !mgr.isDatabaseOpen()) {
             String message = "Database manager is null or database not opened.";
             JSONStoreDatabaseClosedException jsException = new JSONStoreDatabaseClosedException(message);
-            logger.error(message, jsException);
+            logger.logError(message, jsException);
             throw jsException;
         }
 
@@ -130,14 +129,14 @@ public class JSONStoreCollection {
         } catch (Exception e) {
             String message = "Could not get database accessor. Database is not open.";
             JSONStoreDatabaseClosedException jsException = new JSONStoreDatabaseClosedException(message);
-            logger.error(message, jsException);
+            logger.logError(message, jsException);
             throw jsException;
         }
 
         if (acc == null) {
             String message = "Database accessor is not open. The database is not open.";
             JSONStoreDatabaseClosedException jsException = new JSONStoreDatabaseClosedException(message);
-            logger.error(message, jsException);
+            logger.logError(message, jsException);
             throw jsException;
         }
 
@@ -145,7 +144,7 @@ public class JSONStoreCollection {
         if (rawDB == null || !rawDB.isOpen()) {
             String message = "Could not get raw collection instance. The database is not open.";
             JSONStoreDatabaseClosedException jsException = new JSONStoreDatabaseClosedException(message);
-            logger.error(message, jsException);
+            logger.logError(message, jsException);
             throw jsException;
         }
 
@@ -204,7 +203,7 @@ public class JSONStoreCollection {
         catch (JSONException e) {
             String message = "Error when attempting to find a document. A JSONException occurred.";
             JSONStoreFindException jsException = new JSONStoreFindException(message, e);
-            logger.error(message, jsException);
+            logger.logError(message, jsException);
             throw jsException;
         }
     }
@@ -520,7 +519,7 @@ public class JSONStoreCollection {
                             !getSearchFields().containsKey(replaceKey) && !getAdditionalSearchFields().containsKey(replaceKey)) {
                         String message = "Replace criteria '" + replaceKey + "' must be a search field or additional search field.";
                         JSONStoreChangeException jsException = new JSONStoreChangeException(message);
-                        logger.error(message, jsException);
+                        logger.logError(message, jsException);
                         throw jsException;
                     }
                 }
@@ -579,7 +578,7 @@ public class JSONStoreCollection {
                     } catch (JSONStoreReplaceException e) {
                         String message = "Failed to replace an existing document.";
                         JSONStoreChangeException jsException = new JSONStoreChangeException(message, e);
-                        logger.error(message, jsException);
+                        logger.logError(message, jsException);
                         throw jsException;
                     }
                 }
@@ -594,7 +593,7 @@ public class JSONStoreCollection {
                         } catch (JSONStoreAddException e) {
                             String message = "Failed to add a new document.";
                             JSONStoreChangeException jsException = new JSONStoreChangeException(message, e);
-                            logger.error(message, jsException);
+                            logger.logError(message, jsException);
                             throw jsException;
                         }
                     }
@@ -897,7 +896,7 @@ public class JSONStoreCollection {
             } catch (Throwable e) {
                 String message = "Error when attempting to find a document. An error occurred when reading from the database.";
                 JSONStoreFindException jsException = new JSONStoreFindException(message, e);
-                logger.error(message, jsException);
+                logger.logError(message, jsException);
                 throw jsException;
 
             } finally {
@@ -1043,14 +1042,14 @@ public class JSONStoreCollection {
             if (operation == null) {
                 String message = "Document does not contain the operation to execute.";
                 JSONStoreMarkCleanException jsException = new JSONStoreMarkCleanException(message);
-                logger.error(message, jsException);
+                logger.logError(message, jsException);
                 throw jsException;
             }
 
         } catch (JSONException e) {
             String message = "Could not parse the document.";
             JSONStoreMarkCleanException jsException = new JSONStoreMarkCleanException(message, e);
-            logger.error(message, jsException);
+            logger.logError(message, jsException);
             throw jsException;
         }
 
@@ -1252,7 +1251,7 @@ public class JSONStoreCollection {
                     } catch (Throwable t) {
                         String message = "An internal error occurred when trying to store the JSONObject. Error mapping the search fields.";
                         JSONStoreAddException jsException = new JSONStoreAddException(message, t);
-                        logger.error(message, jsException);
+                        logger.logError(message, jsException);
                         throw jsException;
                     }
 
@@ -1288,7 +1287,7 @@ public class JSONStoreCollection {
                     if (rc == -1) { // no error
                         String message = "An internal error occurred when trying to insert a document.";
                         JSONStoreAddException jsException = new JSONStoreAddException(message, numberOfDocumentsStored);
-                        logger.error(message, jsException);
+                        logger.logError(message, jsException);
                         throw jsException;
                     }
 
@@ -1444,7 +1443,7 @@ public class JSONStoreCollection {
                 } catch (Throwable e) {
                     // The update failed, so add the document to the list of failures.
                     String message = "Error while removing/deleting document in collection \"" + getName() + "\".";
-                    logger.trace(message);
+                    logger.logTrace(message);
                     failures.add(documentToRemove);
 
                     // Roll back the transaction.
@@ -1472,7 +1471,7 @@ public class JSONStoreCollection {
 
                 String message = "At least one document could not be removed.";
                 JSONStoreRemoveException jsException = new JSONStoreRemoveException(message, failures);
-                logger.error(message, jsException);
+                logger.logError(message, jsException);
                 throw jsException;
             }
 
@@ -1598,7 +1597,7 @@ public class JSONStoreCollection {
 
                     catch (Throwable e) {
                         String message = "Error while updating document on collection \"" + schema.getName() + "\".";
-                        logger.trace(message);
+                        logger.logTrace(message);
 
                         if (document != null) {
                             failures.add(document);
@@ -1609,7 +1608,7 @@ public class JSONStoreCollection {
                 if (failures.size() != 0) {
                     String message = "At least one document failed to be replaced.";
                     JSONStoreReplaceException jsException = new JSONStoreReplaceException(message, failures);
-                    logger.error(message, jsException);
+                    logger.logError(message, jsException);
                     throw jsException;
                 }
 

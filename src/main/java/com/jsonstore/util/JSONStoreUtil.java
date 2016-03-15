@@ -13,8 +13,6 @@
 
 package com.jsonstore.util;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,17 +27,17 @@ public class JSONStoreUtil {
          "@", "$", "^", "&", "|", ">", "<", "?", "-" //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$//$NON-NLS-5$//$NON-NLS-6$//$NON-NLS-7$//$NON-NLS-8$//$NON-NLS-9$
     };
 
-     private static Logger coreLogger = LogManager.getLogger("com.jsonstore-core");
-     private static Logger dbLogger = LogManager.getLogger("com.jsonstore-db");
+     private static JSONStoreLogger coreLogger = JSONStoreLogger.getLogger("com.jsonstore-core");
+     private static JSONStoreLogger dbLogger = JSONStoreLogger.getLogger("com.jsonstore-db");
 
      private JSONStoreUtil () {
      }
      
-     public static Logger getCoreLogger () {
+     public static JSONStoreLogger getCoreLogger () {
           return coreLogger;
      }
-     
-     public static Logger getDatabaseLogger () {
+
+     public static JSONStoreLogger getDatabaseLogger () {
           return dbLogger;
      }
      

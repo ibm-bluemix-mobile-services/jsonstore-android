@@ -20,6 +20,7 @@ import com.jsonstore.database.DatabaseAccessor;
 import com.jsonstore.database.DatabaseConstants;
 import com.jsonstore.database.DatabaseManager;
 import com.jsonstore.database.DatabaseSchema;
+import com.jsonstore.exceptions.JSONStoreChangePasswordException;
 import com.jsonstore.exceptions.JSONStoreCloseAllException;
 import com.jsonstore.exceptions.JSONStoreDatabaseClosedException;
 import com.jsonstore.exceptions.JSONStoreDestroyFailureException;
@@ -34,9 +35,10 @@ import com.jsonstore.exceptions.JSONStoreSchemaMismatchException;
 import com.jsonstore.exceptions.JSONStoreTransactionDuringInitException;
 import com.jsonstore.exceptions.JSONStoreTransactionFailureException;
 import com.jsonstore.exceptions.JSONStoreTransactionInProgressException;
+import com.jsonstore.security.SecurityManager;
+import com.jsonstore.security.SecurityUtils;
+import com.jsonstore.util.JSONStoreLogger;
 import com.jsonstore.util.JSONStoreUtil;
-
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -50,9 +52,13 @@ import java.util.TreeMap;
 
 public class JSONStore {
     private Context context = null;
-    private Logger logger = JSONStoreUtil.getCoreLogger();
+    private static final String LIBCRYPTO_FILE_NAME = "crypto"; //$NON-NLS-1$
+    private static final String LIBSSL_FILE_NAME = "ssl";
+    private JSONStoreLogger logger = JSONStoreUtil.getCoreLogger();
     private static boolean transactionInProgress = false;
+    private static final int NUM_BYTES_FOR_SALT = 32;
     private String username;
+    private boolean encryption;
 
     private static JSONStore instance;
     private Map<String, JSONStoreCollection> collectionMap = new HashMap<String, JSONStoreCollection>();
@@ -79,17 +85,32 @@ public class JSONStore {
     }
 
     /**
+     * Set encryption enablement for encryption
+     *
+     * @param encryption
+     *            The flag to determine if JSONStore should use encryption or not.
+     */
+    public void setEncryption(boolean encryption){
+        this.encryption = encryption;
+
+        if(this.encryption){
+            System.loadLibrary(LIBCRYPTO_FILE_NAME);
+            System.loadLibrary(LIBSSL_FILE_NAME);
+            //SQLiteDatabase.loadLibs(this.context);
+        }
+    }
+
+    /**
      * @exclude
      */
     private void checkVersionMigration(android.content.Context context) throws JSONStoreFileAccessException, JSONStoreMigrationException {
-        //JSONStoreLogger.logFileInfo(getFileInfo());
 
         SharedPreferences sp = context.getSharedPreferences(DatabaseConstants.JSONSTORE_PREFS, android.content.Context.MODE_PRIVATE);
         String ver = sp.getString(DatabaseConstants.JSONSTORE_VERSION_PREF, null);
 
         // We don't have a version key, which means we need to migrate.
         if (ver == null) {
-            logger.trace("Performing migation to JSONStore 2.0");
+            logger.logTrace("Performing migation to JSONStore 2.0");
 
             // Check if the com.worklight.jsonstore directory exists, if not create it.
             File dbBaseDir = context.getDatabasePath(DatabaseConstants.DB_SUB_DIR);
@@ -99,7 +120,7 @@ public class JSONStore {
                 if (!mkdirWorked) {
                     String message = "Unable to create com.worklight.jsonstore directory.";
                     JSONStoreFileAccessException e = new JSONStoreFileAccessException(message);
-                    logger.trace(message);
+                    logger.logTrace(message);
                     throw e;
                 }
             }
@@ -110,11 +131,11 @@ public class JSONStore {
 
                 boolean moveWorked = dbFile.renameTo(new File(dbBaseDir, DatabaseConstants.DEFAULT_USERNAME + DatabaseConstants.DB_PATH_EXT));
                 if (moveWorked) {
-                    logger.trace("Migration to JOSNStore 2.0 successful.");
+                    logger.logTrace("Migration to JOSNStore 2.0 successful.");
                 } else {
                     String message = "Unable to migrate existing JSONStore database to version 2.0";
                     JSONStoreMigrationException e = new JSONStoreMigrationException(message);
-                    logger.trace(message);
+                    logger.logTrace(message);
                     throw e;
                 }
             }
@@ -129,14 +150,15 @@ public class JSONStore {
     /**
      * @exclude
      */
-    private boolean provisionDatabase(JSONStoreCollection collection, DatabaseSchema schema, String username, boolean dropFirst) throws JSONStoreFileAccessException, JSONStoreMigrationException, JSONStoreCloseAllException, JSONStoreInvalidPasswordException, JSONStoreSchemaMismatchException {
+    private boolean provisionDatabase(JSONStoreCollection collection, DatabaseSchema schema, String username, String password, boolean dropFirst,
+            String secureRandom, int pbkdf2Iterations) throws JSONStoreFileAccessException, JSONStoreMigrationException, JSONStoreCloseAllException, JSONStoreInvalidPasswordException, JSONStoreSchemaMismatchException {
 
         // Check if the store has to be migrated:
         checkVersionMigration(getContext());
 
         DatabaseManager dbManager = DatabaseManager.getInstance();
 
-        handleUsername(dbManager, username);
+        handleUsernameAndPassword(dbManager, username, password, secureRandom, pbkdf2Iterations);
 
         if (!dropFirst && schema.isSchemaMismatched(collection.getName(), schema, getContext())) {
             // The database already exists and we're requesting to re-provision it with a different schema,
@@ -144,7 +166,7 @@ public class JSONStore {
 
             String message = "Table schema mismatch for existing collection.";
             JSONStoreSchemaMismatchException jsException = new JSONStoreSchemaMismatchException(message);
-            logger.trace(message);
+            logger.logTrace(message);
             throw jsException;
         }
 
@@ -157,7 +179,7 @@ public class JSONStore {
             } catch (Exception e) {
                 String message = "Could not retreive a database accessor.";
                 JSONStoreFileAccessException jsException = new JSONStoreFileAccessException(message, e);
-                logger.trace(message);
+                logger.logTrace(message);
                 throw jsException;
             }
 
@@ -171,7 +193,8 @@ public class JSONStore {
     /**
      * @exclude
      */
-    private void handleUsername(DatabaseManager dbManager, String username) throws JSONStoreCloseAllException, JSONStoreInvalidPasswordException {
+    private void handleUsernameAndPassword(DatabaseManager dbManager, String username, String password, String secureRandom,
+                                           int pbkdf2Iterations) throws JSONStoreCloseAllException, JSONStoreInvalidPasswordException {
 
         if (username == null) {
             if (dbManager.getDbPath() == null) {
@@ -183,7 +206,7 @@ public class JSONStore {
                 // you used a user name that does not match the current logged user.
                 String message = "You tried to login with a user that is not the default user that is currently logged in. Call closeAll first.";
                 JSONStoreCloseAllException jsException = new JSONStoreCloseAllException(message);
-                logger.trace(message);
+                logger.logTrace(message);
                 throw jsException;
             }
         }
@@ -197,9 +220,32 @@ public class JSONStore {
                 // you used a user name that does not match the current logged user.
                 String message = "You tried to login with a user that is not " + dbManager.getDbPath() + ". Call closeAll first.";
                 JSONStoreCloseAllException jsException = new JSONStoreCloseAllException(message);
-                logger.trace(message);
+                logger.logTrace(message);
                 throw jsException;
 
+            }
+        }
+
+        if (encryption && (password != null) && !password.equals("")) { //$NON-NLS-1$
+            String salt = SecurityUtils.getRandomString(NUM_BYTES_FOR_SALT);
+
+            try {
+
+                if (!SecurityManager.getInstance(getContext()).isDPKAvailable(username)) {
+                    SecurityManager.getInstance(getContext()).storeDPK(password, username, secureRandom, salt, false, pbkdf2Iterations);
+                }
+                dbManager.setDatabaseKey(getContext(), password, username);
+                // We should do a simple query to check if we can access the DB
+                // if the password is wrong this should throw error -3 'Invalid Key On Provision'.
+                // We don't because we don't have an accessor yet.
+            }
+
+            catch (Throwable e) {
+                // Password must be invalid.
+                String message = "Error setting key.";
+                JSONStoreInvalidPasswordException jsException = new JSONStoreInvalidPasswordException(message, e);
+                logger.logTrace(message);
+                throw jsException;
             }
         }
     }
@@ -271,6 +317,9 @@ public class JSONStore {
             return;
 
         boolean dropFirst = false;
+        String password = null;
+        String secureRandom = null;
+        int pbkdf2Iterations = 0;
 
         // Get options, if specified.
         if (initOptions == null) {
@@ -279,7 +328,12 @@ public class JSONStore {
 
         dropFirst = initOptions.isClear();
         username = initOptions.getUsername();
+        password = initOptions.getPassword();
 
+        if(encryption){
+            secureRandom = initOptions.getSecureRandom();
+            pbkdf2Iterations = initOptions.getPBKDF2Iterations();
+        }
 
         for (JSONStoreCollection collection : collections) {
             // Parse the provided schema.
@@ -297,16 +351,14 @@ public class JSONStore {
                 // Invalid schema provided, so return an error.
                 String message = "Error when validating schema.";
                 JSONStoreInvalidSchemaException jsException = new JSONStoreInvalidSchemaException(message, e);
-                logger.trace(message);
+                logger.logTrace(message);
                 throw jsException;
             }
 
             // Provision the database.
-            boolean wasReopened = provisionDatabase(collection, schema, username, dropFirst);
+            boolean wasReopened = provisionDatabase(collection, schema, username, password, dropFirst, secureRandom, pbkdf2Iterations);
             collectionMap.put(collection.getName(), collection);
             collection.initialize(this, schema, wasReopened);
-
-            //logInst.end();
         }
     }
 
@@ -339,7 +391,6 @@ public class JSONStore {
      * @throws JSONStoreTransactionFailureException
      */
     public void closeAll() throws JSONStoreCloseAllException, JSONStoreDatabaseClosedException, JSONStoreTransactionFailureException {
-        try {
             if (transactionInProgress) {
                 throw new JSONStoreTransactionFailureException("Cannot close collections while executing a transaction.");
             }
@@ -350,7 +401,7 @@ public class JSONStore {
             if (!dbManager.isDatabaseOpen()) {
                 String message = "Could not close all collections. The database is not open.";
                 JSONStoreDatabaseClosedException jsException = new JSONStoreDatabaseClosedException(message);
-                logger.trace(message);
+                logger.logTrace(message);
                 throw jsException;
             }
 
@@ -363,12 +414,9 @@ public class JSONStore {
             } catch (Throwable e) {
                 String message = "Could not close the database. An exception occurred.";
                 JSONStoreCloseAllException jsException = new JSONStoreCloseAllException(message, e);
-                logger.trace(message);
+                logger.logTrace(message);
                 throw jsException;
             }
-        } finally {
-            //logInst.end();
-        }
 
     }
 
@@ -440,7 +488,7 @@ public class JSONStore {
                 // DPK still exists, worked = NO
                 String message = "Failed to remove the following DPK Key: "+ dpkKey + " with content: " + dpkAfterRemove;
                 JSONStoreMetadataRemovalFailure jsException = new JSONStoreMetadataRemovalFailure(message);
-                logger.trace(message);
+                logger.logTrace(message);
                 throw jsException;
 
             } else {
@@ -456,7 +504,7 @@ public class JSONStore {
                         //Failed to remove file, worked = NO
                         String message = "Failed to remove the following file: " + userStoreFile;
                         JSONStoreDestroyFileError jsException = new JSONStoreDestroyFileError(message);
-                        logger.trace(message);
+                        logger.logTrace(message);
                         throw jsException;
 
                     } else {
@@ -480,9 +528,6 @@ public class JSONStore {
 
             throw new JSONStoreDestroyFailureException(t.getMessage());
 
-        } finally {
-
-         //   logInst.end();
         }
     }
 
@@ -494,7 +539,6 @@ public class JSONStore {
      * @throws JSONStoreTransactionFailureException
      */
     public void destroy() throws JSONStoreDestroyFailureException, JSONStoreTransactionFailureException {
-        try {
             if (transactionInProgress) {
                 throw new JSONStoreTransactionFailureException("Cannot destroy store while executing a transaction.");
             }
@@ -504,6 +548,7 @@ public class JSONStore {
 
             // Destroy the keychain.
             dbManager.destroyPreferences(getContext());
+            dbManager.destroyKeychain(getContext());
             dbManager.clearDbPath();
             dbManager.clearDatabaseKey();
 
@@ -522,13 +567,10 @@ public class JSONStore {
                 // The database file and the keychain were not destroyed, so throw exception:
                 String message = "There was an error when destroying the JSONStore. The destroyDatabase failed.";
                 JSONStoreDestroyFailureException jsException = new JSONStoreDestroyFailureException(message);
-                logger.trace(message);
+                logger.logTrace(message);
                 throw jsException;
 
             }
-        } finally {
-            //logInst.end();
-        }
     }
 
     /**
@@ -551,12 +593,18 @@ public class JSONStore {
                     String name = possibleDB.getName();
                     String username = name.substring(0, name.length() - DatabaseConstants.DB_PATH_EXT.length());
                     long fileSizeBytes = possibleDB.length();
+                    boolean isEncrypted = true;
 
                     try {
                         //Following http://sqlite.org/fileformat.html, first 16 bytes should contain 'sqlite'
                         in = new FileInputStream(possibleDB);  //TODO: close stream!
                         byte[] first6Bytes = new byte[6];
                         in.read(first6Bytes, 0, 6);
+                        String first16String = new String(first6Bytes);
+
+                        if(first16String.equalsIgnoreCase("SQLite")) { //$NON-NLS-1$
+                            isEncrypted = false;
+                        }
 
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -572,7 +620,7 @@ public class JSONStore {
                     }
 
 
-                    JSONStoreFileInfo currentDB = new JSONStoreFileInfo(username, fileSizeBytes);
+                    JSONStoreFileInfo currentDB = new JSONStoreFileInfo(username, fileSizeBytes, isEncrypted);
                     results.put(username, currentDB);
 
                 }
@@ -705,6 +753,54 @@ public class JSONStore {
         } finally {
             //logInst.end();
         }
+    }
+
+    /**
+     * Change the password.
+     * @param username The user name.
+     * @param old_password The old password.
+     * @param new_password The new password.
+     * @param pbkdf2Iterations The number of iterations used by the Password-Based Key Derivation Function 2 algorithm used to secure the password.
+     * @throws JSONStoreDatabaseClosedException
+     * @throws JSONStoreChangePasswordException if there was a problem changing the password, usually because the provided password was wrong
+     */
+    public void changePassword(String username, String old_password, String new_password, int pbkdf2Iterations) throws JSONStoreDatabaseClosedException, JSONStoreChangePasswordException {
+        if(encryption){
+            try {
+                DatabaseManager.getInstance().getDatabase();
+                if (!DatabaseManager.getInstance().isDatabaseOpen()) {
+                    throw new JSONStoreDatabaseClosedException();
+                }
+            } catch (Exception e) {
+                throw new JSONStoreDatabaseClosedException();
+            }
+
+            SecurityManager secManager = SecurityManager.getInstance(context);
+
+            try {
+                String oldDPK = secManager.getDPK(old_password, username);
+                String salt = secManager.getSalt(username);
+                secManager.storeDPK(new_password, username, oldDPK, salt, true, pbkdf2Iterations);
+            } catch (Throwable t) {
+                throw new JSONStoreChangePasswordException(t);
+            }
+        } else {
+            System.out.println("Encryption has been disabled");
+            logger.logTrace("Encryption has been disabled");
+        }
+
+    }
+
+    /**
+     * Change the password.
+     * @param username The user name.
+     * @param old_password The old password.
+     * @param new_password The new password.
+     * @throws JSONStoreDatabaseClosedException
+     * @throws JSONStoreChangePasswordException if there was a problem changing the password, usually because the provided password was wrong
+     */
+    public void changePassword(String username, String old_password, String new_password) throws JSONStoreDatabaseClosedException, JSONStoreChangePasswordException {
+        changePassword(username, old_password, new_password, SecurityUtils.PBKDF2_ITERATIONS);
     }
 
 }

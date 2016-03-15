@@ -17,13 +17,15 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import com.jsonstore.util.JSONStoreUtil;
 
-import org.apache.logging.log4j.Logger;
+import com.jsonstore.security.SecurityManager;
+import com.jsonstore.util.JSONStoreLogger;
+import com.jsonstore.util.JSONStoreUtil;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.TreeMap;
+
 
 
 
@@ -33,10 +35,11 @@ public class DatabaseManager {
 
 	private static boolean initialized = false;
 	private static final DatabaseManager instance = new DatabaseManager();
-	private static final Logger logger = JSONStoreUtil.getDatabaseLogger();
+	private static final JSONStoreLogger logger = JSONStoreUtil.getDatabaseLogger();
 
 	private HashMap<String, DatabaseAccessor> accessors;
 	private SQLiteDatabase database;
+	private boolean encryption = false;
 	private String databaseKey;
 	private String dbPath;
 
@@ -59,14 +62,14 @@ public class DatabaseManager {
 	}
 	
 	public DatabaseAccessor getDatabase() throws Exception {
-		if(accessors == null || accessors.size() == 0){
+		if (accessors == null || accessors.size() == 0) {
 			throw new Exception("could not retrieve unprovisioned database");
 		}
-		
+
 		//Get the first available accessor in the accessor map; all accessors are the same, but they are tied to specific collections
 		Object accessorObj = this.accessors.values().toArray()[0];
-		
-		DatabaseAccessor accessor = (DatabaseAccessor)(accessorObj);
+
+		DatabaseAccessor accessor = (DatabaseAccessor) (accessorObj);
 
 		return accessor;
 	}
@@ -83,6 +86,9 @@ public class DatabaseManager {
 		this.dbPath = null;
 	}
 
+	public void setDatabaseKey(Context context, String password, String username) throws Exception {
+		this.databaseKey = SecurityManager.getInstance(context).getDPK(password, username);
+	}
 
 	public void setDbPath(String username) {
 		this.dbPath = username + DatabaseConstants.DB_PATH_EXT;
@@ -156,6 +162,10 @@ public class DatabaseManager {
 		return rc;
 	}
 
+	public synchronized void destroyKeychain(Context context) {
+		SecurityManager.getInstance(context).destroyKeychain();
+	}
+
 	public synchronized void destroyPreferences(Context context) {
 		SharedPreferences sp = context.getSharedPreferences(DatabaseConstants.JSONSTORE_PREFS, android.content.Context.MODE_PRIVATE);
 		if (sp != null) {
@@ -169,14 +179,6 @@ public class DatabaseManager {
 		if (this.database == null) {
 			// The database is closed, so open it.
 
-			// Initialize database libaries.
-
-			if (!DatabaseManager.initialized) {
-				//SQLiteDatabase.loadLibs(context);
-
-				DatabaseManager.initialized = true;
-			}
-
 			if (this.databaseKey == null) {
 				// Set the database key to an empty string to disable
 				// encryption.
@@ -184,7 +186,14 @@ public class DatabaseManager {
 				this.databaseKey = ""; //$NON-NLS-1$
 			}
 			File dbFile = new File(context.getDatabasePath(DatabaseConstants.DB_SUB_DIR), dbPath);
+
 			this.database = SQLiteDatabase.openDatabase(dbFile.getAbsolutePath(), null, SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.CREATE_IF_NECESSARY);
+
+			//Uncomment to disable encryption
+			// this.database = SQLiteDatabase.openDatabase(dbFile.getAbsolutePath(), null, SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.CREATE_IF_NECESSARY);
+
+
+
 
 		}
 	}
@@ -206,7 +215,7 @@ public class DatabaseManager {
 				exists = true;
 			}
 
-			logger.debug("provisioning database \"" + name + "\" (" + "already exists: " + exists + ")");
+			logger.logDebug("provisioning database \"" + name + "\" (" + "already exists: " + exists + ")");
 
 			if (!exists) {
 				accessor.createTable();

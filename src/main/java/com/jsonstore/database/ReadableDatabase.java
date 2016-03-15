@@ -16,9 +16,9 @@ package com.jsonstore.database;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.jsonstore.util.JSONStoreLogger;
 import com.jsonstore.util.JSONStoreUtil;
 
-import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -43,7 +43,7 @@ public class ReadableDatabase {
 	private static final String SQL_OR = " OR "; //$NON-NLS-1$
 
 	private SQLiteDatabase database;
-	protected Logger logger;
+	protected JSONStoreLogger logger;
 	private DatabaseSchema schema;
 
 	protected ReadableDatabase(SQLiteDatabase database, DatabaseSchema schema) {
@@ -365,14 +365,14 @@ public class ReadableDatabase {
 	}
 
 	public Cursor rawQuery(String sql, String selectionArgs[]) {
-		this.logger.trace("executing query on database \"" + this.schema.getName() + "\":");
-		this.logger.trace("   " + sql);
+		this.logger.logTrace("executing query on database \"" + this.schema.getName() + "\":");
+		this.logger.logTrace("   " + sql);
 
 		if (selectionArgs != null) {
-			this.logger.trace("arguments:");
+			this.logger.logTrace("arguments:");
 
 			for (String selectionArg : selectionArgs) {
-				this.logger.trace("   " + selectionArg);
+				this.logger.logTrace("   " + selectionArg);
 			}
 		}
 
