@@ -3,9 +3,10 @@
 JSONStore is a lightweight, document-oriented storage system that enables persistent storage of JSON documents for Android applications.
 
 # Features
-* A simple API that gives developers to add, store, replace, search through documents without memorizing cumbersom query syntax
+* A simple API that gives developers to add, store, replace, search through documents without memorizing query syntax
 * Ability to track local changes
 	
+**Note on Security**: By default security has been disabled so please review this blog post to enable its usage in JSONStore. 
 # Usage
 
 #### Initialize and open connections, get an Accessor, and add data
@@ -175,7 +176,41 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 		throw ex;
 	}
 	
-####Check whether a document is dirty
+#### Security - close access to all opened Collections for the current user	
+    // Fill in the blank to get the Android application context.
+     Context ctx = getContext();
+
+    try {
+        // Close access to all collections.
+        WLJSONStore.getInstance(ctx).closeAll();
+    } 
+    catch (JSONStoreException ex) {
+        // Handle failure for any of the previous JSONStore operations.
+        throw ex;
+    }
+
+#### Security - change the password that is used to access a Store	
+    // The password should be user input. 
+    // It is hard-coded in the example for brevity.
+    String username = "carlos";
+    String oldPassword = "123";
+    String newPassword = "456";
+
+    // Fill in the blank to get the Android application context.
+    Context ctx = getContext();
+
+    try {
+        WLJSONStore.getInstance(ctx).changePassword(oldPassword, newPassword, username);
+    } 
+    catch (JSONStoreException ex) {
+        // Handle failure for any of the previous JSONStore operations.
+        throw ex;
+    } finally {
+        // It is good practice to not leave passwords in memory
+        oldPassword = null;
+        newPassword = null;
+    }
+#### Check whether a document is dirty
 
 	// Fill in the blank to get the Android application context.
 	Context ctx = getContext();
@@ -280,6 +315,8 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 		long fileSize = fileInfo.getFileSizeBytes();
 		String username = fileInfo.getUsername();
 	}
+	
+	
 
 
 # License
