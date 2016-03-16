@@ -321,7 +321,7 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 
 JSONStore uses logback-android which is a SL4J facade on top of Google's logging platform. This provides users more customization than the normal Android logger capabilities. To configure the logger you will need to create `assets/logback.xml`. For more information please review the logback-android [documentation](https://github.com/tony19/logback-android).
 
-    ```XML
+```XML
 		<configuration>
     		<!-- Create a logcat appender -->
 		    <!-- Create a file appender for a log in the application's data directory -->
@@ -336,7 +336,7 @@ JSONStore uses logback-android which is a SL4J facade on top of Google's logging
         		<appender-ref ref="log" />
     		</root>
 		</configuration>
-    ```
+```
 
 # License
 
