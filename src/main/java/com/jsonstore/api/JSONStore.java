@@ -90,12 +90,12 @@ public class JSONStore {
      * @param encryption
      *            The flag to determine if JSONStore should use encryption or not.
      */
-    public void setEncryption(boolean encryption){
+    public void setEncryption(boolean encryption) throws Exception {
         this.encryption = encryption;
 
         if(this.encryption){
-            System.loadLibrary(LIBCRYPTO_FILE_NAME);
-            System.loadLibrary(LIBSSL_FILE_NAME);
+            JSONStoreUtil.loadLibrary(context, LIBCRYPTO_FILE_NAME);
+            JSONStoreUtil.loadLibrary(context, LIBSSL_FILE_NAME);
             //SQLiteDatabase.loadLibs(this.context);
         }
     }

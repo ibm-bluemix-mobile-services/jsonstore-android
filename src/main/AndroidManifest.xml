@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.jsonstore">
 
     <uses-sdk android:minSdkVersion="18"
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:targetSdkVersion="18"
         android:maxSdkVersion="18" />
 
