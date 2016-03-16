@@ -335,6 +335,9 @@ public class JSONStore {
             pbkdf2Iterations = initOptions.getPBKDF2Iterations();
         }
 
+        JSONStoreLogger.setAnalyticsEnabled(initOptions.isAnalyticsEnabled());
+
+
         for (JSONStoreCollection collection : collections) {
             // Parse the provided schema.
             DatabaseSchema schema = null;
@@ -801,6 +804,14 @@ public class JSONStore {
      */
     public void changePassword(String username, String old_password, String new_password) throws JSONStoreDatabaseClosedException, JSONStoreChangePasswordException {
         changePassword(username, old_password, new_password, SecurityUtils.PBKDF2_ITERATIONS);
+    }
+
+    /**
+     * Enable or disable the collection of analytic data for JSONStore.
+     * @param isAnalyticsEnabled should be true if analytic data should be collected
+     */
+    public void setAnalyticsEnabled(boolean isAnalyticsEnabled){
+        JSONStoreLogger.setAnalyticsEnabled(isAnalyticsEnabled);
     }
 
 }

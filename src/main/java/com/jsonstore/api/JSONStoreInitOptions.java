@@ -22,6 +22,7 @@ import com.jsonstore.security.SecurityUtils;
 public final class JSONStoreInitOptions {
 	private String username, password, secureRandom;
 	private boolean clear = false;
+	private boolean enableAnalytics = false;
 	private int pbkdf2Iterations = SecurityUtils.PBKDF2_ITERATIONS; //The default has to remain 10000, or all applications from previous versions will crash.
 
 	public JSONStoreInitOptions(String username) {
@@ -109,6 +110,22 @@ public final class JSONStoreInitOptions {
 
 	public void setPBKDF2Iterations(int pbkdf2Iterations) {
 		this.pbkdf2Iterations = pbkdf2Iterations;
+	}
+
+	/**
+	 * Set the flag or remove the flag to enable JSONStore analytics logging.
+	 * @param enable When true, analytics will be logged for JSONStore.
+	 */
+	public void setAnalyticsEnabled(boolean enable) {
+		enableAnalytics = enable;
+	}
+
+	/**
+	 * Get the flag if analytics for JSONStore is enabled.
+	 * @return True if analytics will be logged for JSONStore.
+	 */
+	public boolean isAnalyticsEnabled() {
+		return enableAnalytics;
 	}
 
 

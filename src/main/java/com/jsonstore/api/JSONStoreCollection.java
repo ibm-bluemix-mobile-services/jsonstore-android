@@ -384,7 +384,7 @@ public class JSONStoreCollection {
      */
     public void removeCollection() throws JSONStoreRemoveCollectionException, JSONStoreDatabaseClosedException, JSONStoreTransactionFailureException {
 
-       // JSONStoreAnalyticsLogInstance logInst = JSONStoreLogger.startAnalyticsInstance(getUsername(), getName(), JSONStoreLogger.OPERATION_REMOVE_COLLECTION);
+       JSONStoreAnalyticsLogInstance logInst = JSONStoreLogger.startAnalyticsInstance(getUsername(), getName(), JSONStoreLogger.OPERATION_REMOVE_COLLECTION);
         try {
             DatabaseAccessor acc = getAccessor();
             if(initializedJSONStoreInstance.isTransactionInProgress()){
@@ -393,7 +393,7 @@ public class JSONStoreCollection {
             acc.dropTable();
             initializedJSONStoreInstance.removeCollectionReference(this);
         } finally {
-         //   logInst.end();
+            logInst.end();
         }
 
     }
@@ -406,12 +406,12 @@ public class JSONStoreCollection {
      *             the collection.
      */
     public void clearCollection() throws JSONStoreDatabaseClosedException {
-        //JSONStoreAnalyticsLogInstance logInst = JSONStoreLogger.startAnalyticsInstance(getUsername(), getName(), JSONStoreLogger.OPERATION_CLEAR);
+        JSONStoreAnalyticsLogInstance logInst = JSONStoreLogger.startAnalyticsInstance(getUsername(), getName(), JSONStoreLogger.OPERATION_CLEAR);
         try {
             DatabaseAccessor acc = getAccessor();
             acc.getRawDatabase().delete(getName(), "1", new String[] {}); //$NON-NLS-1$
         } finally {
-            //logInst.end();
+            logInst.end();
         }
     }
 
@@ -490,7 +490,7 @@ public class JSONStoreCollection {
     public int changeData(List<JSONObject> data, JSONStoreChangeOptions options) throws JSONStoreChangeException, JSONStoreDatabaseClosedException {
 
 
-        //JSONStoreAnalyticsLogInstance logInst = JSONStoreLogger.startAnalyticsInstance(getUsername(), getName(), JSONStoreLogger.OPERATION_CHANGE);
+        JSONStoreAnalyticsLogInstance logInst = JSONStoreLogger.startAnalyticsInstance(getUsername(), getName(), JSONStoreLogger.OPERATION_CHANGE);
         try {
             getAccessor(); //This does some closed checks
             if (options == null) options = new JSONStoreChangeOptions();
@@ -618,7 +618,7 @@ public class JSONStoreCollection {
                 throw new JSONStoreChangeException(e);
             }
         } finally {
-           // logInst.end();
+           logInst.end();
         }
     }
 
@@ -756,7 +756,7 @@ public class JSONStoreCollection {
                 throw new JSONStoreFindException("Error occured filtering results", e);
             }
         } finally {
-            //logInst.end();
+            logInst.end();
         }
     }
 
@@ -923,7 +923,7 @@ public class JSONStoreCollection {
 
             return results;
         } finally {
-            //logInst.end();
+            logInst.end();
         }
     }
 
@@ -966,7 +966,7 @@ public class JSONStoreCollection {
 
             return false;
         } finally {
-            //logInst.end();
+            logInst.end();
         }
     }
 
@@ -990,7 +990,7 @@ public class JSONStoreCollection {
             List<JSONObject> docs = JSONStoreUtil.convertJSONObjectArrayToJSONObjectList(documents);
             return markDocumentsClean(docs);
         } finally {
-            //logInst.end();
+            logInst.end();
         }
 
     }
@@ -1154,7 +1154,7 @@ public class JSONStoreCollection {
 
             }
         } finally {
-            //logInst.end();
+            logInst.end();
         }
     }
 
@@ -1184,7 +1184,7 @@ public class JSONStoreCollection {
 
             return countDocuments(queryContent, options);
         } finally {
-            //logInst.end();
+            logInst.end();
         }
     }
 
@@ -1226,7 +1226,7 @@ public class JSONStoreCollection {
      *             perform the add.
      */
     public void addData(List<JSONObject> data, JSONStoreAddOptions options) throws JSONStoreAddException, JSONStoreDatabaseClosedException {
-        //JSONStoreAnalyticsLogInstance logInst = JSONStoreLogger.startAnalyticsInstance(getUsername(), getName(), JSONStoreLogger.OPERATION_ADD);
+        JSONStoreAnalyticsLogInstance logInst = JSONStoreLogger.startAnalyticsInstance(getUsername(), getName(), JSONStoreLogger.OPERATION_ADD);
         try {
             if (options == null) options = new JSONStoreAddOptions();
             if(data == null || data.size() <= 0) return;
@@ -1305,7 +1305,7 @@ public class JSONStoreCollection {
                 }
             }
         } finally {
-            //logInst.end();
+            logInst.end();
         }
     }
 
@@ -1404,7 +1404,7 @@ public class JSONStoreCollection {
      *             perform the remove.
      */
     public int removeDocumentsById(List<Integer> document_ids, JSONStoreRemoveOptions options) throws JSONStoreRemoveException, JSONStoreDatabaseClosedException {
-        //JSONStoreAnalyticsLogInstance logInst = JSONStoreLogger.startAnalyticsInstance(getUsername(), getName(), JSONStoreLogger.OPERATION_REMOVE);
+        JSONStoreAnalyticsLogInstance logInst = JSONStoreLogger.startAnalyticsInstance(getUsername(), getName(), JSONStoreLogger.OPERATION_REMOVE);
         try {
             DatabaseAccessor accessor = getAccessor();
             if(options == null) {
@@ -1488,7 +1488,7 @@ public class JSONStoreCollection {
 
             return removedCount;
         } finally {
-            //logInst.end();
+            logInst.end();
         }
     }
 
@@ -1618,7 +1618,7 @@ public class JSONStoreCollection {
                 acc.getRawDatabase().endTransaction();
             }
         } finally {
-            //logInst.end();
+            logInst.end();
         }
     }
 

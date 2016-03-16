@@ -13,15 +13,17 @@
 
 package com.jsonstore.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
+import com.jsonstore.api.JSONStoreFileInfo;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.List;
+
 
 public class JSONStoreLogger {
 
@@ -142,6 +144,11 @@ public class JSONStoreLogger {
 			this.collection = collection;
 			this.operation = operation;
 		}
+
+		public void end() {
+			long endTime = System.currentTimeMillis();
+			logAnalytics(startTime, endTime, username, collection, operation);
+		}
 	}
      private static final HashMap<String, JSONStoreLogger> instances =
           new HashMap<String, JSONStoreLogger>();
@@ -192,6 +199,66 @@ public class JSONStoreLogger {
      public static JSONStoreAnalyticsLogInstance startAnalyticsInstance(String username, String collection, String operation) {
     	 return new JSONStoreAnalyticsLogInstance(username, collection, operation);
      }
+
+	public static void logAnalytics(Long startTime, Long endTime, String username, String collection, String operation){
+		if(!analyticsEnabled) {
+			return;
+		}
+
+		String analyticsMessage = ""; //$NON-NLS-1$
+		JSONObject metadata = new JSONObject();
+
+		try {
+			metadata.put(ANALYTICS_SOURCE_KEY, ANALYTICS_SOURCE);
+
+			metadata.put(ANALYTICS_START_TIME, startTime);
+			metadata.put(ANALYTICS_END_TIME, endTime);
+
+			metadata.put(ANALYTICS_USERNAME, username);
+			metadata.put(ANALYTICS_COLLECTION, collection);
+			metadata.put(ANALYTICS_OPERATION, operation);
+
+			metadata.put(ANALYTICS_RETURN_CODE, 0);
+		} catch (JSONException e) {
+			// Will not happen, only adding properties to a JSONObject created in this method
+
+			logger.error("Error logging JSONStore analytics.", e);
+		}
+
+		logger.info(analyticsMessage, metadata);
+	}
+
+	public static void setAnalyticsEnabled(boolean enabled){
+		analyticsEnabled = enabled;
+	}
+
+	public static void logFileInfo(List<JSONStoreFileInfo> fileInfoList){
+		if(!analyticsEnabled){
+			return;
+		}
+
+		for(JSONStoreFileInfo fileInfo : fileInfoList){
+			String analyticsMessage = ""; //$NON-NLS-1$
+			JSONObject metadata = new JSONObject();
+
+			try {
+				metadata.put(ANALYTICS_SOURCE_KEY, ANALYTICS_SOURCE);
+
+				metadata.put(ANALYTICS_USERNAME, fileInfo.getUsername());
+				metadata.put(ANALYTICS_SIZE, fileInfo.getFileSizeBytes());
+				metadata.put(ANALYTICS_IS_ENCRYPTED, fileInfo.isEncrypted());
+
+				metadata.put(ANALYTICS_RETURN_CODE, 0);
+			} catch (JSONException e) {
+				// Will not happen, only adding properties to a JSONObject created in this method
+
+				logger.error("Error logging JSONStore analytics.", e);
+			}
+
+			logger.info(analyticsMessage, metadata);
+		}
+
+	}
      
     //TODO: create a request to send logs (REST-ENDPOINT)
 }
