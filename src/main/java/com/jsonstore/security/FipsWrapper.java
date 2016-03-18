@@ -21,7 +21,6 @@ import java.nio.charset.CharsetDecoder;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -47,10 +46,6 @@ public class FipsWrapper {
                MessageDigest sha = MessageDigest.getInstance("SHA-1");
                key = sha.digest(key);
                key = Arrays.copyOf(key, 16); // use only first 128 bit
-
-               SecureRandom secureRandom = new SecureRandom();
-
-               secureRandom.nextBytes(iv);
 
                SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
 
@@ -93,10 +88,6 @@ public class FipsWrapper {
                MessageDigest sha = MessageDigest.getInstance("SHA-1");
                key = sha.digest(key);
                key = Arrays.copyOf(key, 16); // use only first 128 bit
-
-               SecureRandom secureRandom = new SecureRandom();
-
-               secureRandom.nextBytes(iv);
 
                SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
 
