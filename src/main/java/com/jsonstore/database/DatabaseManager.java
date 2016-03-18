@@ -189,12 +189,6 @@ public class DatabaseManager {
 
 			this.database = SQLiteDatabase.openDatabase(dbFile.getAbsolutePath(), null, SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.CREATE_IF_NECESSARY);
 
-			//Uncomment to disable encryption
-			// this.database = SQLiteDatabase.openDatabase(dbFile.getAbsolutePath(), null, SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.CREATE_IF_NECESSARY);
-
-
-
-
 		}
 	}
 

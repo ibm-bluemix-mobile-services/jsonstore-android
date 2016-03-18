@@ -35,6 +35,7 @@ import com.jsonstore.exceptions.JSONStoreSchemaMismatchException;
 import com.jsonstore.exceptions.JSONStoreTransactionDuringInitException;
 import com.jsonstore.exceptions.JSONStoreTransactionFailureException;
 import com.jsonstore.exceptions.JSONStoreTransactionInProgressException;
+import com.jsonstore.security.FipsWrapper;
 import com.jsonstore.security.SecurityManager;
 import com.jsonstore.security.SecurityUtils;
 import com.jsonstore.util.JSONStoreLogger;
@@ -52,8 +53,8 @@ import java.util.TreeMap;
 
 public class JSONStore {
     private Context context = null;
-    private static final String LIBCRYPTO_FILE_NAME = "crypto"; //$NON-NLS-1$
-    private static final String LIBSSL_FILE_NAME = "ssl";
+    private static final String LIBCRYPTO_FILE_NAME = "libcrypto.so.1.0.0"; //$NON-NLS-1$
+    private static final String LIBSSL_FILE_NAME = "libssl.so.1.0.0";
     private JSONStoreLogger logger = JSONStoreUtil.getCoreLogger();
     private static boolean transactionInProgress = false;
     private static final int NUM_BYTES_FOR_SALT = 32;
@@ -92,11 +93,25 @@ public class JSONStore {
      */
     public void setEncryption(boolean encryption) throws Exception {
         this.encryption = encryption;
+        //Uncomment if block to enable SQLCipher encryption
+       /* if(encryption){
+            JSONStoreUtil.loadLib(this.context, LIBCRYPTO_FILE_NAME);
+            SQLiteDatabase.loadLibs(this.context);
 
-        if(this.encryption){
-            JSONStoreUtil.loadLibrary(context, LIBCRYPTO_FILE_NAME);
-            JSONStoreUtil.loadLibrary(context, LIBSSL_FILE_NAME);
-            //SQLiteDatabase.loadLibs(this.context);
+        }*/
+
+
+    }
+
+    /**
+     * Enable Fips mode for JSONStore
+     */
+    public void enableFips(){
+        if(encryption){
+            FipsWrapper.enableFips(context);
+
+        } else {
+            logger.logTrace("Encryption is not enabled");
         }
     }
 
@@ -328,9 +343,8 @@ public class JSONStore {
 
         dropFirst = initOptions.isClear();
         username = initOptions.getUsername();
-        password = initOptions.getPassword();
-
         if(encryption){
+            password = initOptions.getPassword();
             secureRandom = initOptions.getSecureRandom();
             pbkdf2Iterations = initOptions.getPBKDF2Iterations();
         }

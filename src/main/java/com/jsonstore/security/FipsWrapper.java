@@ -14,14 +14,27 @@
 package com.jsonstore.security;
 
 
+import android.content.Context;
+import android.util.Base64;
+
+import com.jsonstore.util.JSONStoreLogger;
+import com.jsonstore.util.JSONStoreUtil;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.security.InvalidKeyException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -30,10 +43,16 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+
 
 public class FipsWrapper {
 
-
+     private static final String LIBSSL_FILE_NAME = "libssl.so.1.0.0";
+     private static MicroVPNLib nativeLib;
+     private static final String ERROR_LOG_PREFIX = "Error processing X509Certificate: ";
+     private static JSONStoreLogger logger = JSONStoreUtil.getCoreLogger();
      private static  byte[] _encryptAES (byte[] key, byte[] iv,  String to_encrypt )  {
 
           byte[] encryptedText = new byte[256];
@@ -41,23 +60,20 @@ public class FipsWrapper {
           Cipher cipher = null;
           try {
                //Get instance of cipher for aes
-               cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+               cipher = Cipher.getInstance("AES/CBC/NoPadding");
 
                //Create hash for key using sha1
                MessageDigest sha = MessageDigest.getInstance("SHA-1");
                key = sha.digest(key);
-               key = Arrays.copyOf(key, 16); // use only first 128 bit
-
-               SecureRandom secureRandom = new SecureRandom();
-
-               secureRandom.nextBytes(iv);
+               String keyString = SecurityUtils.encodeBytesAsHexString(key);
+               key = Arrays.copyOf(keyString.getBytes("UTF-8"), 16); // use only first 128 bit
 
                SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
 
                IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
                cipher.init(Cipher.ENCRYPT_MODE,  secretKey, ivSpec);
-               plaintext = to_encrypt.getBytes();
+               plaintext = to_encrypt.getBytes("UTF-8");
                encryptedText = cipher.doFinal(plaintext);
 
 
@@ -71,10 +87,13 @@ public class FipsWrapper {
                e.printStackTrace();
 
           } catch(IllegalBlockSizeException e){
+
                e.printStackTrace();
+               System.out.println(e.toString());
 
           } catch(BadPaddingException e){
                e.printStackTrace();
+               System.out.println(e.toString());
 
           } finally {
                return encryptedText;
@@ -82,21 +101,21 @@ public class FipsWrapper {
 
      }
 
+
+
      private static byte[] _decryptAES (byte[] key, byte[] iv, byte[] encryptedData){
           byte[] plaintext = new byte[256];
           Cipher cipher = null;
           try {
                //Get instance of cipher for aes
-               cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+               cipher = Cipher.getInstance("AES/CBC/NoPadding");
 
                //Create hash for key using sha1
                MessageDigest sha = MessageDigest.getInstance("SHA-1");
                key = sha.digest(key);
-               key = Arrays.copyOf(key, 16); // use only first 128 bit
+               String keyString = SecurityUtils.encodeBytesAsHexString(key);
+               key = Arrays.copyOf(keyString.getBytes("UTF-8"), 16); // use only first 128 bit
 
-               SecureRandom secureRandom = new SecureRandom();
-
-               secureRandom.nextBytes(iv);
 
                SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
 
@@ -151,7 +170,7 @@ public class FipsWrapper {
           byte[] encryptedBytes) {
           byte[] keyByteArray = hexStringToByteArray(key);
           byte[] ivByteArray = hexStringToByteArray(iv);
-          byte[] decryptedBytes = _decryptAES (keyByteArray, ivByteArray, encryptedBytes);
+          byte[] decryptedBytes = _decryptAES(keyByteArray, ivByteArray, encryptedBytes);
           String decryptedText;
           try {
                CharsetDecoder charsetDecoder = Charset.forName("UTF-8") //$NON-NLS-1$
@@ -160,10 +179,76 @@ public class FipsWrapper {
                decryptedText = new String(decryptedBytes, "UTF-8"); // in case the default charset is not UTF-8 //$NON-NLS-1$
           }
           catch (Throwable t) {
+               t.printStackTrace();
                decryptedText = null;
           }
           Arrays.fill(decryptedBytes, (byte) 0);
           return decryptedText;
+     }
+
+     private static void saveCrtBundle(Context ctx) {
+          TrustManagerFactory tmf = null;
+          File localStorage = new File(JSONStoreUtil.getNoBackupFilesDir(ctx), "ca-bundle.crt");
+          Exception ex = null;
+          try {
+               OutputStream ostr = new FileOutputStream(localStorage);
+
+               tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+               tmf.init((KeyStore) null);
+
+               X509TrustManager xtm = (X509TrustManager) tmf.getTrustManagers()[0];
+               for (X509Certificate cert : xtm.getAcceptedIssuers()) {
+                    try {
+                         String certEnc = "-----BEGIN CERTIFICATE-----\n";
+                         byte[] array = certEnc.getBytes("UTF-8");
+                         ostr.write(array, 0, array.length);
+
+                         array = cert.getEncoded();
+                         array = Base64.encode(array, Base64.DEFAULT);
+                         ostr.write(array, 0, array.length);
+
+                         certEnc = "-----END CERTIFICATE-----\n";
+                         array = certEnc.getBytes("UTF-8");
+                         ostr.write(array, 0, array.length);
+                    } catch (IOException e) {
+                         logger.logError(ERROR_LOG_PREFIX, e);
+                         // do not rethrow
+                    } catch (CertificateEncodingException e) {
+                         logger.logError(ERROR_LOG_PREFIX, e);
+                         // do not rethrow
+                    }
+               }
+
+               ostr.flush();
+               ostr.close();
+          } catch (IOException e) {
+               ex = e;
+          } catch (NoSuchAlgorithmException e) {
+               ex = e;
+          } catch (KeyStoreException e) {
+               ex = e;
+          }
+
+          if (ex != null) {
+               logger.logError(ERROR_LOG_PREFIX, ex);
+          }
+     }
+
+     public static void enableFips(Context context){
+          JSONStoreUtil.loadLib(context, LIBSSL_FILE_NAME);
+
+          nativeLib = new MicroVPNLib();
+
+          if(System.getProperty("javax.net.ssl.trustStore") != null) {
+               File localStorage = new File(JSONStoreUtil.getNoBackupFilesDir(context), "ca-bundle.crt");
+               if(!localStorage.exists()) {
+                    saveCrtBundle(context);
+               }
+          } else {
+               saveCrtBundle(context);
+          }
+
+          nativeLib.FIPSInit();
      }
 
 }
