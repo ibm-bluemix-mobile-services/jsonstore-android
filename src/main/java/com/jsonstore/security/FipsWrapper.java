@@ -33,8 +33,10 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -65,6 +67,7 @@ public class FipsWrapper {
                //Create hash for key using sha1
                MessageDigest sha = MessageDigest.getInstance("SHA-1");
                key = sha.digest(key);
+
                String keyString = SecurityUtils.encodeBytesAsHexString(key);
                key = Arrays.copyOf(keyString.getBytes("UTF-8"), 16); // use only first 128 bit
 
@@ -115,7 +118,6 @@ public class FipsWrapper {
                key = sha.digest(key);
                String keyString = SecurityUtils.encodeBytesAsHexString(key);
                key = Arrays.copyOf(keyString.getBytes("UTF-8"), 16); // use only first 128 bit
-
 
                SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
 
