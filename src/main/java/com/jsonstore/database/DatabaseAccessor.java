@@ -13,12 +13,10 @@
 
 package com.jsonstore.database;
 
-import android.database.sqlite.SQLiteDatabase;
-
 // TODO: better exception types...
 
-public interface DatabaseAccessor {
-	public SQLiteDatabase getRawDatabase();
+public interface DatabaseAccessor<T> {
+	public Database<T> getRawDatabase();
 
 	public ReadableDatabase getReadableDatabase();
 

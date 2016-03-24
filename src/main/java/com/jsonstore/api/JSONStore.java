@@ -93,12 +93,10 @@ public class JSONStore {
      */
     public void setEncryption(boolean encryption) throws Exception {
         this.encryption = encryption;
-        //Uncomment if block to enable SQLCipher encryption
-       /* if(encryption){
+        DatabaseManager.setEncryption(encryption);
+       if(encryption){
             JSONStoreUtil.loadLib(this.context, LIBCRYPTO_FILE_NAME);
-            SQLiteDatabase.loadLibs(this.context);
-
-        }*/
+        }
 
 
     }

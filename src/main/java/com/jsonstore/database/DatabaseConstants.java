@@ -14,6 +14,9 @@
 package com.jsonstore.database;
 
 public class DatabaseConstants {
+
+	public static final String SQLCIPHER_CLASS = "com.jsonstore.database.SQLCipherDatabase";
+	public static final String SQLITE_CLASS = "com.jsonstore.database.SQLiteStandardDatabase";
 	public static final String FIELD_DELETED = "_deleted"; //$NON-NLS-1$
 	public static final String FIELD_DIRTY = "_dirty"; //$NON-NLS-1$
 	public static final String FIELD_ID = "_id"; //$NON-NLS-1$

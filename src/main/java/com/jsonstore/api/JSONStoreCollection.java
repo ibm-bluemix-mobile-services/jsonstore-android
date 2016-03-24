@@ -15,8 +15,8 @@ package com.jsonstore.api;
 
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 
+import com.jsonstore.database.Database;
 import com.jsonstore.database.DatabaseAccessor;
 import com.jsonstore.database.DatabaseConstants;
 import com.jsonstore.database.DatabaseManager;
@@ -140,7 +140,7 @@ public class JSONStoreCollection {
             throw jsException;
         }
 
-        SQLiteDatabase rawDB = acc.getRawDatabase();
+        Database<?> rawDB = acc.getRawDatabase();
         if (rawDB == null || !rawDB.isOpen()) {
             String message = "Could not get raw collection instance. The database is not open.";
             JSONStoreDatabaseClosedException jsException = new JSONStoreDatabaseClosedException(message);

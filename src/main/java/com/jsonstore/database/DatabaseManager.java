@@ -38,8 +38,8 @@ public class DatabaseManager {
 	private static final JSONStoreLogger logger = JSONStoreUtil.getDatabaseLogger();
 
 	private HashMap<String, DatabaseAccessor> accessors;
-	private SQLiteDatabase database;
-	private boolean encryption = false;
+	private Database<?> database;
+	private static boolean encryption = false;
 	private String databaseKey;
 	private String dbPath;
 
@@ -59,6 +59,10 @@ public class DatabaseManager {
 		}
 
 		return accessor;
+	}
+
+	public static void setEncryption(boolean encrypt){
+		encryption = encrypt;
 	}
 	
 	public DatabaseAccessor getDatabase() throws Exception {
@@ -176,6 +180,8 @@ public class DatabaseManager {
 	}
 
 	private void openDatabaseIfNecessary(Context context) {
+
+
 		if (this.database == null) {
 			// The database is closed, so open it.
 
@@ -187,12 +193,29 @@ public class DatabaseManager {
 			}
 			File dbFile = new File(context.getDatabasePath(DatabaseConstants.DB_SUB_DIR), dbPath);
 
-			this.database = SQLiteDatabase.openDatabase(dbFile.getAbsolutePath(), null, SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.CREATE_IF_NECESSARY);
+			try {
+				if(encryption){
+					this.database = (Database<?>) Class.forName(DatabaseConstants.SQLCIPHER_CLASS)
+							.getConstructor()
+							.newInstance();
+					this.database.openDatabase(dbFile.getAbsolutePath(), this.databaseKey, SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.CREATE_IF_NECESSARY, context);
+				} else {
+					this.database = (Database<?>) Class.forName(DatabaseConstants.SQLITE_CLASS)
+							.getConstructor()
+							.newInstance();
+					this.database.openDatabase(dbFile.getAbsolutePath(), SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.CREATE_IF_NECESSARY);
+				}
+
+			} catch(Exception e){
+				e.printStackTrace();
+			}
+
+
 
 		}
 	}
 
-	public synchronized boolean provisionDatabase(Context context, DatabaseSchema schema, boolean dropFirst) {
+	public synchronized boolean provisionDatabase(Context context, DatabaseSchema schema, boolean dropFirst){
 
 		boolean exists = false;
 		String name = schema.getName();

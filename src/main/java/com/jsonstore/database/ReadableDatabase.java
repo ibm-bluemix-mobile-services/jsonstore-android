@@ -14,7 +14,6 @@
 package com.jsonstore.database;
 
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 
 import com.jsonstore.util.JSONStoreLogger;
 import com.jsonstore.util.JSONStoreUtil;
@@ -42,17 +41,17 @@ public class ReadableDatabase {
 	private static final String SQL_LIKE = " LIKE ?"; //$NON-NLS-1$
 	private static final String SQL_OR = " OR "; //$NON-NLS-1$
 
-	private SQLiteDatabase database;
+	private Database<?> database;
 	protected JSONStoreLogger logger;
 	private DatabaseSchema schema;
 
-	protected ReadableDatabase(SQLiteDatabase database, DatabaseSchema schema) {
+	protected ReadableDatabase(Database<?> database, DatabaseSchema schema) {
 		this.database = database;
 		this.logger = JSONStoreUtil.getDatabaseLogger();
 		this.schema = schema;
 	}
 
-	protected SQLiteDatabase getDatabase() {
+	protected Database<?> getDatabase() {
 		return this.database;
 	}
 

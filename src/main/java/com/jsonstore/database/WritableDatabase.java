@@ -15,7 +15,7 @@ package com.jsonstore.database;
 
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+
 
 import com.jsonstore.jackson.JacksonSerializedJSONObject;
 import com.jsonstore.util.JSONStoreUtil;
@@ -35,7 +35,7 @@ public class WritableDatabase extends ReadableDatabase {
      private static final String SQL_UPDATE = "UPDATE {0} SET {1}{2};"; //$NON-NLS-1$
      private static final String SQL_WHERE = " WHERE"; //$NON-NLS-1$
      
-     protected WritableDatabase (SQLiteDatabase database,
+     protected WritableDatabase (Database<?> database,
           DatabaseSchema schema) {
           super (database, schema);
           

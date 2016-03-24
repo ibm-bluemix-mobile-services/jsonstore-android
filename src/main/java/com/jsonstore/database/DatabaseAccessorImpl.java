@@ -14,7 +14,6 @@
 package com.jsonstore.database;
 
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 
 import com.jsonstore.util.JSONStoreLogger;
 import com.jsonstore.util.JSONStoreUtil;
@@ -42,12 +41,12 @@ public class DatabaseAccessorImpl implements DatabaseAccessor {
 		DatabaseAccessorImpl.ignoredSchemaNodes.add(DatabaseConstants.FIELD_OPERATION);
 	}
 
-	private SQLiteDatabase database;
+	private Database<?> database;
 	private ReadableDatabase readableDB;
 	private DatabaseSchema schema;
 	private WritableDatabase writableDB;
 
-	protected DatabaseAccessorImpl(SQLiteDatabase database, DatabaseSchema schema) {
+	protected DatabaseAccessorImpl(Database<?> database, DatabaseSchema schema) {
 		this.database = database;
 		this.readableDB = new ReadableDatabase(database, schema);
 		this.schema = schema;
@@ -55,7 +54,7 @@ public class DatabaseAccessorImpl implements DatabaseAccessor {
 	}
 
 	@Override
-	public SQLiteDatabase getRawDatabase() {
+	public Database<?> getRawDatabase() {
 		return this.database;
 	}
 
@@ -108,7 +107,7 @@ public class DatabaseAccessorImpl implements DatabaseAccessor {
 		execSQL(DatabaseAccessorImpl.SQL_DROP_TABLE, name);
 	}
 
-	private void execSQL(String sql, Object... args) {
+	private void execSQL(String sql, Object... args)  {
 		String formattedSQL = JSONStoreUtil.formatString(sql, args);
 
 		logger.logTrace("executing SQL on database \"" + this.schema.getName() + "\":");
