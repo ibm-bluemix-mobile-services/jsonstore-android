@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.1.0](https://github.com/ibm-bluemix-mobile-services/jsonstore-android/tree/1.1.0) (2016-03-24)
+[Full Changelog](https://github.com/ibm-bluemix-mobile-services/jsonstore-android/compare/1.0.1...1.1.0)
+
 ## [1.0.1](https://github.com/ibm-bluemix-mobile-services/jsonstore-android/tree/1.0.1) (2016-03-18)
 [Full Changelog](https://github.com/ibm-bluemix-mobile-services/jsonstore-android/compare/1.0.0...1.0.1)
 
