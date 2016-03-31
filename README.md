@@ -7,9 +7,19 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 * Ability to track local changes
 	
 **Note on Security**: By default security has been disabled so please review this blog post to enable its usage in JSONStore. 
+
+# Dependencies
+ Add the following to your `build.gradle`
+ 
+ ```Gradle 
+ 	    compile 'org.codehaus.jackson:jackson-jaxrs:1.9.13'
+    	compile 'com.google.guava:guava:14.0.1'
+  ```
 # Usage
 
 #### Initialize and open connections, get an Accessor, and add data
+
+```Java
 	// Fill in the blank to get the Android application context.
 	Context ctx = getContext();
 
@@ -37,11 +47,13 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 		throw ex;
 	} catch (JSONException ex) {
 	// Handle failure for any JSON parsing issues.
-		throw ex;
+		throw ex;		
 	}
+```
 	
 #### Find - locate documents inside the Store
 
+```Java
 	// Fill in the blank to get the Android application context.
 	Context ctx = getContext();
 
@@ -79,9 +91,10 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 		// Handle failure for any of the previous JSONStore operations
 		throw ex;
 	}
-
+```
 #### Replace - change the documents that are already stored inside a Collection
 
+```Java
 	// Fill in the blank to get the Android application context.
 	Context ctx = getContext();
 	
@@ -104,9 +117,10 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 		// Handle failure for any of the previous JSONStore operations.
 		throw ex;	
 	}
-	
+```	
 #### Remove - delete all documents that match the query
 
+```Java
 	// Fill in the blank to get the Android application context.
 	
 	Context ctx = getContext();
@@ -134,9 +148,10 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 		// Handle failure for any JSON parsing issues.
 		throw ex;
 	}
-	
+```	
 #### Count - gets the total number of documents that match a query
 
+```Java
 	// Fill in the blank to get the Android application context.
 	Context ctx = getContext();
 	try {
@@ -161,9 +176,10 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 	} catch (JSONStoreException ex) {
 		throw ex;
 	}
-
+```
 #### Destroy - wipes data for all users, destroys the internal storage, and clears security artifacts
 
+```Java
 	// Fill in the blank to get the Android application context.
 	Context ctx = getContext();
 	
@@ -175,21 +191,39 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 		// Handle failure for any of the previous JSONStore operations
 		throw ex;
 	}
-	
-#### Security - close access to all opened Collections for the current user	
+```	
+#### Security - close access to all opened Collections for the current user
+
+```Java	
     // Fill in the blank to get the Android application context.
      Context ctx = getContext();
 
     try {
         // Close access to all collections.
-        WLJSONStore.getInstance(ctx).closeAll();
+        JSONStore.getInstance(ctx).closeAll();
     } 
     catch (JSONStoreException ex) {
         // Handle failure for any of the previous JSONStore operations.
         throw ex;
     }
+```
 
-#### Security - change the password that is used to access a Store	
+#### Security - enable encryption
+
+```Java
+	// Fill in the blank to get the Android application context.
+	Context ctx = getContext();
+	try {
+			//Enable encryption
+			JSONStore.getInstance(ctx).setEncryption(true);
+	} catch (JSONStoreException e){
+		// Handle failure for any of the previous JSONStore operations.
+		throw ex;
+	}
+```
+#### Security - change the password that is used to access a Store
+
+```Java
     // The password should be user input. 
     // It is hard-coded in the example for brevity.
     String username = "carlos";
@@ -200,7 +234,7 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
     Context ctx = getContext();
 
     try {
-        WLJSONStore.getInstance(ctx).changePassword(oldPassword, newPassword, username);
+        JSONStore.getInstance(ctx).changePassword(oldPassword, newPassword, username);
     } 
     catch (JSONStoreException ex) {
         // Handle failure for any of the previous JSONStore operations.
@@ -210,8 +244,10 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
         oldPassword = null;
         newPassword = null;
     }
+```
 #### Check whether a document is dirty
 
+```Java
 	// Fill in the blank to get the Android application context.
 	Context ctx = getContext();
 
@@ -226,8 +262,10 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 	 	// Handle failure for any of the previous JSONStore operations.
 	 	throw ex;
 	}
-
+```
 #### Check the number of dirty documents
+
+```Java
 	// Fill in the blank to get the Android application context.
 	Context ctx = getContext();
 	
@@ -241,8 +279,11 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 			// Handle failure for any of the previous JSONStore operations.
 			throw ex;
 		}
+```
 
 #### Remove a Collection
+
+```Java
 
 	// Fill in the blank to get the Android application context.
 	Context ctx = getContext();
@@ -257,8 +298,11 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 		// Handle failure for any of the previous JSONStore operations.
 		throw ex;
 	}
+```
 
 #### Clear all data that is inside a Collection
+
+```Java
 
 	// Fill in the blank to get the Android application context.
 	Context ctx = getContext();
@@ -274,9 +318,11 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 		// Handle failure for any of the previous JSONStore operations.
 			throw ex;
 	}
-	
+```
+
 #### Start a transaction, add some data, remove a document, commit the transaction and roll back the transaction if there is a failure
-	
+
+```Java	
 	// Fill in the blank to get the Android application context.
 	Context ctx = getContext();
 	
@@ -307,7 +353,10 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 			throw ex;
 	}
 
+```
 #### Get file information
+
+```Java
 	Context ctx = getContext();
 	List<JSONStoreFileInfo> allFileInfo = JSONStore.getInstance(ctx).getFileInfo();
 
@@ -315,7 +364,7 @@ JSONStore is a lightweight, document-oriented storage system that enables persis
 		long fileSize = fileInfo.getFileSizeBytes();
 		String username = fileInfo.getUsername();
 	}
-	
+```	
 	
 # Logger
 
