@@ -95,22 +95,11 @@ public class JSONStore {
         this.encryption = encryption;
         DatabaseManager.setEncryption(encryption);
        if(encryption){
-            JSONStoreUtil.loadLib(this.context, LIBCRYPTO_FILE_NAME);
+           JSONStoreUtil.loadLib(this.context, LIBCRYPTO_FILE_NAME);
+           FipsWrapper.enableFips(this.context);
         }
 
 
-    }
-
-    /**
-     * Enable Fips mode for JSONStore
-     */
-    public void enableFips(){
-        if(encryption){
-            FipsWrapper.enableFips(context);
-
-        } else {
-            logger.logTrace("Encryption is not enabled");
-        }
     }
 
     /**

@@ -52,7 +52,6 @@ import javax.net.ssl.X509TrustManager;
 public class FipsWrapper {
 
      private static final String LIBSSL_FILE_NAME = "libssl.so.1.0.0";
-     private static MicroVPNLib nativeLib;
      private static final String ERROR_LOG_PREFIX = "Error processing X509Certificate: ";
      private static JSONStoreLogger logger = JSONStoreUtil.getCoreLogger();
      private static  byte[] _encryptAES (byte[] key, byte[] iv,  String to_encrypt )  {
@@ -238,9 +237,6 @@ public class FipsWrapper {
 
      public static void enableFips(Context context){
           JSONStoreUtil.loadLib(context, LIBSSL_FILE_NAME);
-
-          nativeLib = new MicroVPNLib();
-
           if(System.getProperty("javax.net.ssl.trustStore") != null) {
                File localStorage = new File(JSONStoreUtil.getNoBackupFilesDir(context), "ca-bundle.crt");
                if(!localStorage.exists()) {
@@ -250,7 +246,6 @@ public class FipsWrapper {
                saveCrtBundle(context);
           }
 
-          nativeLib.FIPSInit();
      }
 
 }
