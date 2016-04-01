@@ -17,6 +17,7 @@ repositories {
 }
 apply plugin: 'com.android.library'
 apply plugin: 'maven'
+//apply plugin: 'signing'
 android {
     compileSdkVersion 21
     buildToolsVersion "23.0.1"
@@ -25,7 +26,7 @@ android {
         minSdkVersion 9
         targetSdkVersion 21
         versionCode 1
-        versionName "1.0"
+        versionName "1.1.1"
     }
     buildTypes {
         release {
@@ -148,6 +149,7 @@ artifacts {
     archives androidJavadocsJar
 }
 
+
 /* For signing
 signing {
    required { isReleaseBuild() }
@@ -175,14 +177,13 @@ def isReleaseBuild() {
 }
 
 def getVersion() {
-    return '1.0.0-SNAPSHOT'
+    return '1.1.1-SNAPSHOT'
 }
 
 uploadArchives {
     repositories {
         mavenDeployer {
             //   beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
             repository(url: getReleaseRepositoryUrl()) {
                 authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
             }
