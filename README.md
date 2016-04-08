@@ -1,12 +1,12 @@
-# JSONStore Android
+# JSONStore for Android
 
 JSONStore is a lightweight, document-oriented storage system that enables persistent storage of JSON documents for Android applications.
 
-# Features
+## Features
 * A simple API that allows developers to add, store, replace, search through documents without memorizing query syntax
 * Ability to track local changes
 	
-# Dependencies
+## Installation
 Add the following to your `build.gradle`
  
 ```Gradle 
@@ -25,7 +25,7 @@ compile 'com.ibm.mobilefirstplatform.clientsdk.android:jsonstore:+'
 
 > Note that the above statement will always import the most recent release of JSONStore. In case you're building a production application you might want to consider changing `+` to a specific version number.
 
-# Usage
+## Usage
 
 #### Initialize and open connections, get an Accessor, and add data
 
@@ -370,7 +370,7 @@ for(JSONStoreFileInfo fileInfo : allFileInfo) {
 }
 ```	
 	
-# Logger
+## Logger
 
 JSONStore uses logback-android which is a SL4J facade on top of Google's logging platform. This provides users more customization than the normal Android logger capabilities. To configure the logger you will need to create `assets/logback.xml`. For more information please review the logback-android [documentation](https://github.com/tony19/logback-android).
 
