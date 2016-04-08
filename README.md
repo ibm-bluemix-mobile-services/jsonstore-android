@@ -43,7 +43,7 @@ try {
 	collections.add(peopleCollection);
 
   // Open the collection.
-  JSONStore.getInstance(ctx).openCollections(collections, initOptions);
+  JSONStore.getInstance(ctx).openCollections(collections);
 
   // Add data to the collection.
   JSONObject newDocument = new JSONObject("{name: 'saitama', age: 10}");
